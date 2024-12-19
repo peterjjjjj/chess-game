@@ -229,36 +229,34 @@ public:
         Position twoSpacesInFront(position.x, position.y + 2 * direction); // two squares ahead
 
         // regular move
-        if (boardManager.getAtPosition(spaceInFront.x, spaceInFront.y) == nullptr) {
+        if (spaceInFront.y >= 0 && spaceInFront.y < 8 && boardManager.getAtPosition(spaceInFront.x, spaceInFront.y) == nullptr) {
             moves.push_back(spaceInFront);
         }
 
         // first move
         if (isFirstMove &&
+            spaceInFront.y >= 0 && spaceInFront.y < 8 &&
             boardManager.getAtPosition(spaceInFront.x, spaceInFront.y) == nullptr &&
+            twoSpacesInFront.y >= 0 && twoSpacesInFront.y < 8 &&
             boardManager.getAtPosition(twoSpacesInFront.x, twoSpacesInFront.y) == nullptr) {
             moves.push_back(twoSpacesInFront);
         }
 
-        //captures
-        Position leftDiagonal(position.x - 1, position.y + direction); // left
-        Position rightDiagonal(position.x + 1, position.y + direction); // right
-
         //left diagonal
-        if (leftDiagonal.x >= 0 && leftDiagonal.x < 8 && leftDiagonal.y >= 0 && leftDiagonal.y < 8) {
-            IGamePiece* piece = boardManager.getAtPosition(leftDiagonal.x, leftDiagonal.y);
-            if (piece != nullptr && piece->isWhite != isWhite) {
-                moves.push_back(leftDiagonal);
+        if (position.x - 1 >= 0 && position.y + direction >= 0 && position.y + direction < 8) {
+            if (boardManager.getAtPosition(position.x - 1, position.y + direction) != nullptr && boardManager.getAtPosition(position.x - 1, position.y + direction)->isWhite != isWhite) {
+                moves.push_back(Position(position.x - 1, position.y + direction));
             }
         }
+
 
         // Check right diagonal
-        if (rightDiagonal.x >= 0 && rightDiagonal.x < 8 && rightDiagonal.y >= 0 && rightDiagonal.y < 8) {
-            IGamePiece* piece = boardManager.getAtPosition(rightDiagonal.x, rightDiagonal.y);
-            if (piece != nullptr && piece->isWhite != isWhite) {
-                moves.push_back(rightDiagonal);
+        if (position.x + 1 < 8 && position.y + direction >= 0 && position.y + direction < 8) {
+            if (boardManager.getAtPosition(position.x + 1, position.y + direction) != nullptr && boardManager.getAtPosition(position.x + 1, position.y + direction)->isWhite != isWhite) {
+                moves.push_back(Position(position.x + 1, position.y + direction));
             }
         }
+
 
         return moves;
     }
@@ -288,11 +286,11 @@ public:
 
         // up
         for (int i = position.y - 1; i >= 0; --i) {
-            IGamePiece *piece = boardManager.getAtPosition(position.x, i);
-            if (piece == nullptr) {
+            if (boardManager.getAtPosition(position.x, i) == nullptr) {
                 moves.push_back(Position(position.x, i));
-            } else {
-                if (piece->isWhite != isWhite) {
+            }
+            else {
+                if (boardManager.getAtPosition(position.x, i)->isWhite != isWhite) {
                     moves.push_back(Position(position.x, i));
                 }
                 break;
@@ -301,11 +299,11 @@ public:
 
         // down
         for (int i = position.y + 1; i < 8; ++i) {
-            IGamePiece *piece = boardManager.getAtPosition(position.x, i);
-            if (piece == nullptr) {
+            if (boardManager.getAtPosition(position.x, i) == nullptr) {
                 moves.push_back(Position(position.x, i));
-            } else {
-                if (piece->isWhite != isWhite) {
+            }
+            else {
+                if (boardManager.getAtPosition(position.x, i)->isWhite != isWhite) {
                     moves.push_back(Position(position.x, i));
                 }
                 break;
@@ -314,11 +312,11 @@ public:
 
         // left
         for (int i = position.x - 1; i >= 0; --i) {
-            IGamePiece *piece = boardManager.getAtPosition(i, position.y);
-            if (piece == nullptr) {
+            if (boardManager.getAtPosition(i, position.y) == nullptr) {
                 moves.push_back(Position(i, position.y));
-            } else {
-                if (piece->isWhite != isWhite) {
+            }
+            else {
+                if (boardManager.getAtPosition(i, position.y)->isWhite != isWhite) {
                     moves.push_back(Position(i, position.y));
                 }
                 break;
@@ -327,11 +325,11 @@ public:
 
         // right
         for (int i = position.x + 1; i < 8; ++i) {
-            IGamePiece *piece = boardManager.getAtPosition(i, position.y);
-            if (piece == nullptr) {
+            if (boardManager.getAtPosition(i, position.y) == nullptr) {
                 moves.push_back(Position(i, position.y));
-            } else {
-                if (piece->isWhite != isWhite) {
+            }
+            else {
+                if (boardManager.getAtPosition(i, position.y)->isWhite != isWhite) {
                     moves.push_back(Position(i, position.y));
                 }
                 break;
@@ -354,8 +352,8 @@ class Knight : public IGamePiece {
     std::string render() override {
         if (isWhite) {
             return UNI_KNIGHT; // white rook
-        } else
-        {
+        }
+        else {
             return UNI_BK_KNIGHT; // black rook
         }
     }
@@ -364,14 +362,37 @@ class Knight : public IGamePiece {
     std::vector<Position> getPotentialMoves() override {
         std::vector<Position> moves;
 
-        moves.push_back(Position(position.x + 2, position.y + 1));
-        moves.push_back(Position(position.x + 2, position.y - 1));
-        moves.push_back(Position(position.x - 2, position.y + 1));
-        moves.push_back(Position(position.x - 2, position.y - 1));
-        moves.push_back(Position(position.x + 1, position.y + 2));
-        moves.push_back(Position(position.x + 1, position.y - 2));
-        moves.push_back(Position(position.x - 1, position.y + 2));
-        moves.push_back(Position(position.x - 1, position.y - 2));
+        if (position.x + 2 < 8 && position.y + 1 < 8 && (boardManager.getAtPosition(position.x + 2, position.y + 1) == nullptr || boardManager.getAtPosition(position.x + 2, position.y + 1)->isWhite != isWhite)) {
+            moves.push_back(Position(position.x + 2, position.y + 1));
+        }
+
+        if (position.x + 2 < 8 && position.y - 1 >= 0 && (boardManager.getAtPosition(position.x + 2, position.y - 1) == nullptr || boardManager.getAtPosition(position.x + 2, position.y - 1)->isWhite != isWhite)) {
+            moves.push_back(Position(position.x + 2, position.y - 1));
+        }
+
+        if (position.x - 2 >= 0 && position.y + 1 < 8 && (boardManager.getAtPosition(position.x - 2, position.y + 1) == nullptr || boardManager.getAtPosition(position.x - 2, position.y + 1)->isWhite != isWhite)) {
+            moves.push_back(Position(position.x - 2, position.y + 1));
+        }
+
+        if (position.x - 2 >= 0 && position.y - 1 >= 0 && (boardManager.getAtPosition(position.x - 2, position.y - 1) == nullptr || boardManager.getAtPosition(position.x - 2, position.y - 1)->isWhite != isWhite)) {
+            moves.push_back(Position(position.x - 2, position.y - 1));
+        }
+
+        if (position.x + 1 < 8 && position.y + 2 < 8 && (boardManager.getAtPosition(position.x + 1, position.y + 2) == nullptr || boardManager.getAtPosition(position.x + 1, position.y + 2)->isWhite != isWhite)) {
+            moves.push_back(Position(position.x + 1, position.y + 2));
+        }
+
+        if (position.x + 1 < 8 && position.y - 2 >= 0 && (boardManager.getAtPosition(position.x + 1, position.y - 2) == nullptr || boardManager.getAtPosition(position.x + 1, position.y - 2)->isWhite != isWhite)) {
+            moves.push_back(Position(position.x + 1, position.y - 2));
+        }
+
+        if (position.x - 1 >= 0 && position.y + 2 < 8 && (boardManager.getAtPosition(position.x - 1, position.y + 2) == nullptr || boardManager.getAtPosition(position.x - 1, position.y + 2)->isWhite != isWhite)) {
+            moves.push_back(Position(position.x - 1, position.y + 2));
+        }
+
+        if (position.x - 1 >= 0 && position.y - 2 >= 0 && (boardManager.getAtPosition(position.x - 1, position.y - 2) == nullptr || boardManager.getAtPosition(position.x - 1, position.y - 2)->isWhite != isWhite)) {
+            moves.push_back(Position(position.x - 1, position.y - 2));
+        }
 
         return moves;
     }
@@ -416,7 +437,8 @@ public:
         for (int x = position.x - 1, y = position.y + 1; x >= 0 && y < 8; --x, ++y) {
             if (boardManager.getAtPosition(x, y) == nullptr) {
                 moves.push_back(Position(x, y));
-            } else {
+            }
+            else {
                 if (boardManager.getAtPosition(x, y)->isWhite != isWhite) {
                     moves.push_back(Position(x, y));
                 }
@@ -428,7 +450,8 @@ public:
         for (int x = position.x + 1, y = position.y - 1; x < 8 && y >= 0; ++x, --y) {
             if (boardManager.getAtPosition(x, y) == nullptr) {
                 moves.push_back(Position(x, y));
-            } else {
+            }
+            else {
                 if (boardManager.getAtPosition(x, y)->isWhite != isWhite) {
                     moves.push_back(Position(x, y));
                 }
@@ -440,7 +463,48 @@ public:
         for (int x = position.x - 1, y = position.y - 1; x >= 0 && y >= 0; --x, --y) {
             if (boardManager.getAtPosition(x, y) == nullptr) {
                 moves.push_back(Position(x, y));
-            } else {
+            }
+            else {
+                if (boardManager.getAtPosition(x, y)->isWhite != isWhite) {
+                    moves.push_back(Position(x, y));
+                }
+                break;
+            }
+        }
+        
+
+        return moves;
+    }
+
+};
+
+//definition of queen
+class Queen : public IGamePiece {
+public:
+    std::string getName() override {
+        std::string color = isWhite ? "White" : "Black";
+        return color + " Queen";
+    }
+
+    std::string render() override {
+        if (isWhite) {
+            return UNI_QUEEN; // white rook
+        }
+        else {
+            return UNI_BK_QUEEN; // black rook
+        }
+    }
+
+    // potential moves, basically rook+bishop
+    std::vector<Position> getPotentialMoves() override {
+        std::vector<Position> moves;
+
+        //topright
+        for (int x = position.x + 1, y = position.y + 1; x < 8 && y < 8; ++x, ++y) {
+            if (boardManager.getAtPosition(x, y) == nullptr) {
+                moves.push_back(Position(x, y));
+            }
+            else {
                 if (boardManager.getAtPosition(x, y)->isWhite != isWhite) {
                     moves.push_back(Position(x, y));
                 }
@@ -448,9 +512,187 @@ public:
             }
         }
 
+        //topleft
+        for (int x = position.x - 1, y = position.y + 1; x >= 0 && y < 8; --x, ++y) {
+            if (boardManager.getAtPosition(x, y) == nullptr) {
+                moves.push_back(Position(x, y));
+            }
+            else {
+                if (boardManager.getAtPosition(x, y)->isWhite != isWhite) {
+                    moves.push_back(Position(x, y));
+                }
+                break;
+            }
+        }
+
+        //bottom right
+        for (int x = position.x + 1, y = position.y - 1; x < 8 && y >= 0; ++x, --y) {
+            if (boardManager.getAtPosition(x, y) == nullptr) {
+                moves.push_back(Position(x, y));
+            }
+            else {
+                if (boardManager.getAtPosition(x, y)->isWhite != isWhite) {
+                    moves.push_back(Position(x, y));
+                }
+                break;
+            }
+        }
+
+        //bottom left
+        for (int x = position.x - 1, y = position.y - 1; x >= 0 && y >= 0; --x, --y) {
+            if (boardManager.getAtPosition(x, y) == nullptr) {
+                moves.push_back(Position(x, y));
+            }
+            else {
+                if (boardManager.getAtPosition(x, y)->isWhite != isWhite) {
+                    moves.push_back(Position(x, y));
+                }
+                break;
+            }
+        }
+
+        // up
+        for (int i = position.y - 1; i >= 0; --i) {
+            if (boardManager.getAtPosition(position.x, i) == nullptr) {
+                moves.push_back(Position(position.x, i));
+            }
+            else {
+                if (boardManager.getAtPosition(position.x, i)->isWhite != isWhite) {
+                    moves.push_back(Position(position.x, i));
+                }
+                break;
+            }
+        }
+
+        // down
+        for (int i = position.y + 1; i < 8; ++i) {
+            if (boardManager.getAtPosition(position.x, i) == nullptr) {
+                moves.push_back(Position(position.x, i));
+            }
+            else {
+                if (boardManager.getAtPosition(position.x, i)->isWhite != isWhite) {
+                    moves.push_back(Position(position.x, i));
+                }
+                break;
+            }
+        }
+
+        // left
+        for (int i = position.x - 1; i >= 0; --i) {
+            if (boardManager.getAtPosition(i, position.y) == nullptr) {
+                moves.push_back(Position(i, position.y));
+            }
+            else {
+                if (boardManager.getAtPosition(i, position.y)->isWhite != isWhite) {
+                    moves.push_back(Position(i, position.y));
+                }
+                break;
+            }
+        }
+
+        // right
+        for (int i = position.x + 1; i < 8; ++i) {
+            if (boardManager.getAtPosition(i, position.y) == nullptr) {
+                moves.push_back(Position(i, position.y));
+            }
+            else {
+                if (boardManager.getAtPosition(i, position.y)->isWhite != isWhite) {
+                    moves.push_back(Position(i, position.y));
+                }
+                break;
+            }
+        }
+
+
+        
         return moves;
     }
 
+};
+
+//definition of king
+class King : public IGamePiece {
+    
+    
+    
+    std::string getName() override {
+        std::string color = isWhite ? "White" : "Black";
+        return color + " King";
+    }
+
+    std::string render() override {
+        if (isWhite) {
+            return UNI_KING; // white rook
+        } else
+        {
+            return UNI_BK_KING; // black rook
+        }
+    }
+
+    //potential moves
+    std::vector<Position> getPotentialMoves() override {
+        std::vector<Position> moves;
+
+        if (position.x + 1 < 8) {
+            if (boardManager.getAtPosition(position.x + 1, position.y) == nullptr ||
+                boardManager.getAtPosition(position.x + 1, position.y)->isWhite != isWhite) {
+                moves.push_back(Position(position.x + 1, position.y));
+            }
+        }
+
+        if (position.x - 1 >= 0) {
+            if (boardManager.getAtPosition(position.x - 1, position.y) == nullptr ||
+                boardManager.getAtPosition(position.x - 1, position.y)->isWhite != isWhite) {
+                moves.push_back(Position(position.x - 1, position.y));
+            }
+        }
+
+        if (position.y + 1 < 8) {
+            if (boardManager.getAtPosition(position.x, position.y + 1) == nullptr ||
+                boardManager.getAtPosition(position.x, position.y + 1)->isWhite != isWhite) {
+                moves.push_back(Position(position.x, position.y + 1));
+            }
+        }
+
+        if (position.y - 1 >= 0) {
+            if (boardManager.getAtPosition(position.x, position.y - 1) == nullptr ||
+                boardManager.getAtPosition(position.x, position.y - 1)->isWhite != isWhite) {
+                moves.push_back(Position(position.x, position.y - 1));
+            }
+        }
+
+        if (position.x + 1 < 8 && position.y + 1 < 8) {
+            if (boardManager.getAtPosition(position.x + 1, position.y + 1) == nullptr ||
+                boardManager.getAtPosition(position.x + 1, position.y + 1)->isWhite != isWhite) {
+                moves.push_back(Position(position.x + 1, position.y + 1));
+            }
+        }
+
+        if (position.x + 1 < 8 && position.y - 1 >= 0) {
+            if (boardManager.getAtPosition(position.x + 1, position.y - 1) == nullptr ||
+                boardManager.getAtPosition(position.x + 1, position.y - 1)->isWhite != isWhite) {
+                moves.push_back(Position(position.x + 1, position.y - 1));
+            }
+        }
+
+        if (position.x - 1 >= 0 && position.y + 1 < 8) {
+            if (boardManager.getAtPosition(position.x - 1, position.y + 1) == nullptr ||
+                boardManager.getAtPosition(position.x - 1, position.y + 1)->isWhite != isWhite) {
+                moves.push_back(Position(position.x - 1, position.y + 1));
+            }
+        }
+
+        if (position.x - 1 >= 0 && position.y - 1 >= 0) {
+            if (boardManager.getAtPosition(position.x - 1, position.y - 1) == nullptr ||
+                boardManager.getAtPosition(position.x - 1, position.y - 1)->isWhite != isWhite) {
+                moves.push_back(Position(position.x - 1, position.y - 1));
+            }
+        }
+
+
+        return moves;
+    }
+    
 };
 
 
@@ -506,6 +748,20 @@ void BoardManager::prepareBoard() {
     //black bishop
     board[2][7] = new Bishop();
     board[5][7] = new Bishop();
+    
+    //white queen
+    board[3][0] = new Queen();
+    board[3][0] -> isWhite = true;
+    
+    //black queen
+    board[3][7] = new Queen();
+
+    //white king
+    board[4][0] = new King();
+    board[4][0] -> isWhite = true;
+
+    //black king
+    board[4][7] = new King();
 
 }
 
