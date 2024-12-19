@@ -204,8 +204,6 @@ public:
 class Pawn : public IGamePiece {
 public:
         
-    
-    
     std::string getName() override {
         std::string color = isWhite ? "White" : "Black";
         return color + "Pawn";
@@ -221,35 +219,32 @@ public:
     virtual std::vector<Position> getPotentialMoves() override {
         std::vector<Position> moves;
 
-        int direction = isWhite ? 1 : -1; // 1 for white pawns, -1 for black pawns
+        int direction = isWhite ? 1 : -1; // 1 for white -1 for black
 
-        // Positions to check
+        // positions to check
         Position spaceInFront(position.x, position.y + direction); // one square ahead
         Position twoSpacesInFront(position.x, position.y + 2 * direction); // two squares ahead
 
-        // Regular move: check one square ahead
-        if (spaceInFront.y >= 0 && spaceInFront.y < 8 && // Check board bounds
-            boardManager.getAtPosition(spaceInFront.x, spaceInFront.y) == nullptr) {
+        // regular move
+        if (boardManager.getAtPosition(spaceInFront.x, spaceInFront.y) == nullptr) {
             moves.push_back(spaceInFront);
         }
 
-        // First move: check two squares ahead
+        // first move
         if (isFirstMove &&
-            spaceInFront.y >= 0 && spaceInFront.y < 8 && // Check bounds for first square
             boardManager.getAtPosition(spaceInFront.x, spaceInFront.y) == nullptr &&
-            twoSpacesInFront.y >= 0 && twoSpacesInFront.y < 8 && // Check bounds for second square
             boardManager.getAtPosition(twoSpacesInFront.x, twoSpacesInFront.y) == nullptr) {
             moves.push_back(twoSpacesInFront);
         }
 
-        // Diagonal captures
+        //captures
         Position leftDiagonal(position.x - 1, position.y + direction); // left
         Position rightDiagonal(position.x + 1, position.y + direction); // right
 
-        // Check left diagonal
+        //left diagonal
         if (leftDiagonal.x >= 0 && leftDiagonal.x < 8 && leftDiagonal.y >= 0 && leftDiagonal.y < 8) {
             IGamePiece* piece = boardManager.getAtPosition(leftDiagonal.x, leftDiagonal.y);
-            if (piece != nullptr && piece->isWhite != isWhite) { // Capture opposite team
+            if (piece != nullptr && piece->isWhite != isWhite) {
                 moves.push_back(leftDiagonal);
             }
         }
@@ -257,20 +252,94 @@ public:
         // Check right diagonal
         if (rightDiagonal.x >= 0 && rightDiagonal.x < 8 && rightDiagonal.y >= 0 && rightDiagonal.y < 8) {
             IGamePiece* piece = boardManager.getAtPosition(rightDiagonal.x, rightDiagonal.y);
-            if (piece != nullptr && piece->isWhite != isWhite) { // Capture opposite team
+            if (piece != nullptr && piece->isWhite != isWhite) {
                 moves.push_back(rightDiagonal);
             }
         }
 
-
-        
         return moves;
     }
-    
-    
-    
-    
+
 };
+
+//definition of rook
+class Rook : public IGamePiece {
+public:
+    std::string getName() override {
+        std::string color = isWhite ? "White" : "Black";
+        return color + " Rook";
+    }
+
+    std::string render() override {
+        if (isWhite) {
+            return UNI_ROOK; // white rook
+        } else {
+            return UNI_BK_ROOK; // black rook
+        }
+    }
+
+    // potential moves
+    std::vector<Position> getPotentialMoves() override {
+        std::vector<Position> moves;
+
+        // up
+        for (int i = position.y - 1; i >= 0; --i) {
+            IGamePiece *piece = boardManager.getAtPosition(position.x, i);
+            if (piece == nullptr) {
+                moves.push_back(Position(position.x, i));
+            } else {
+                if (piece->isWhite != isWhite) {
+                    moves.push_back(Position(position.x, i));
+                }
+                break;
+            }
+        }
+
+        // down
+        for (int i = position.y + 1; i < 8; ++i) {
+            IGamePiece *piece = boardManager.getAtPosition(position.x, i);
+            if (piece == nullptr) {
+                moves.push_back(Position(position.x, i));
+            } else {
+                if (piece->isWhite != isWhite) {
+                    moves.push_back(Position(position.x, i));
+                }
+                break;
+            }
+        }
+
+        // left
+        for (int i = position.x - 1; i >= 0; --i) {
+            IGamePiece *piece = boardManager.getAtPosition(i, position.y);
+            if (piece == nullptr) {
+                moves.push_back(Position(i, position.y));
+            } else {
+                if (piece->isWhite != isWhite) {
+                    moves.push_back(Position(i, position.y));
+                }
+                break;
+            }
+        }
+
+        // right
+        for (int i = position.x + 1; i < 8; ++i) {
+            IGamePiece *piece = boardManager.getAtPosition(i, position.y);
+            if (piece == nullptr) {
+                moves.push_back(Position(i, position.y));
+            } else {
+                if (piece->isWhite != isWhite) {
+                    moves.push_back(Position(i, position.y));
+                }
+                break;
+            }
+        }
+
+        return moves;
+    }
+
+};
+
+
 
 // Implement prepareBoard *after* declaring all pieces so they can be referenced here and placed on the board
 void BoardManager::prepareBoard() {
@@ -291,6 +360,18 @@ void BoardManager::prepareBoard() {
     for (int col = 0; col < 8; col++) {
         board[col][6] = new Pawn();
     }
+    
+    //white rooks
+    board[0][0] = new Rook();
+    board[0][0] -> isWhite = true;
+    board[7][0] = new Rook();
+    board[7][0] -> isWhite = true;
+
+    
+    //black rooks
+    board[0][7] = new Rook();
+    board[7][7] = new Rook();
+
 }
 
 
