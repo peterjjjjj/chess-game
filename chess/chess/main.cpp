@@ -78,7 +78,6 @@ public:
   virtual ~IGamePiece() = default;
     
     bool isFirstMove = true;
-    bool hasJustMovedTwoSpaces = false;
 
 };
 
@@ -162,9 +161,6 @@ public:
           piece->isFirstMove = false;
       }
       
-      if(piece -> hasJustMovedTwoSpaces) {
-          piece->hasJustMovedTwoSpaces = false;
-      }
       
     return true;
   }
@@ -225,73 +221,47 @@ public:
     virtual std::vector<Position> getPotentialMoves() override {
         std::vector<Position> moves;
 
-        int direction = isWhite ? 1 : -1; // 1 for white pawns -1 for black pawns
+        int direction = isWhite ? 1 : -1; // 1 for white pawns, -1 for black pawns
 
-        Position spaceInFront(position.x, position.y + direction); //  square in front
-        Position twoSpacesInFront(position.x, position.y + 2 * direction); // square two spaces in front
+        // Positions to check
+        Position spaceInFront(position.x, position.y + direction); // one square ahead
+        Position twoSpacesInFront(position.x, position.y + 2 * direction); // two squares ahead
 
-        // Regular move
-        if (boardManager.getAtPosition(spaceInFront.x, spaceInFront.y) == nullptr) {
+        // Regular move: check one square ahead
+        if (spaceInFront.y >= 0 && spaceInFront.y < 8 && // Check board bounds
+            boardManager.getAtPosition(spaceInFront.x, spaceInFront.y) == nullptr) {
             moves.push_back(spaceInFront);
         }
 
-        // First move
+        // First move: check two squares ahead
         if (isFirstMove &&
+            spaceInFront.y >= 0 && spaceInFront.y < 8 && // Check bounds for first square
             boardManager.getAtPosition(spaceInFront.x, spaceInFront.y) == nullptr &&
+            twoSpacesInFront.y >= 0 && twoSpacesInFront.y < 8 && // Check bounds for second square
             boardManager.getAtPosition(twoSpacesInFront.x, twoSpacesInFront.y) == nullptr) {
             moves.push_back(twoSpacesInFront);
         }
 
-        // diagonal captures
-        Position leftDiagonal(position.x - 1, position.y + direction); //left
-        Position rightDiagonal(position.x + 1, position.y + direction); //right
+        // Diagonal captures
+        Position leftDiagonal(position.x - 1, position.y + direction); // left
+        Position rightDiagonal(position.x + 1, position.y + direction); // right
 
-        // left diagonal for captures
-        if (boardManager.getAtPosition(leftDiagonal.x, leftDiagonal.y) != nullptr &&
-            !boardManager.getAtPosition(leftDiagonal.x, leftDiagonal.y)->isWhite) {
-            moves.push_back(leftDiagonal);
-        }
-
-        // right diagonal for captures
-        if (boardManager.getAtPosition(rightDiagonal.x, rightDiagonal.y) != nullptr &&
-            !boardManager.getAtPosition(rightDiagonal.x, rightDiagonal.y)->isWhite) {
-            moves.push_back(rightDiagonal);
-        }
-
-        if (isWhite) {
-            // Check left for en passant
-            Position enPassantLeft(position.x - 1, position.y);
-            
-            if (boardManager.getAtPosition(enPassantLeft.x, enPassantLeft.y) != nullptr &&
-                boardManager.getAtPosition(enPassantLeft.x, enPassantLeft.y)->getName() == "Black Pawn" &&
-                hasJustMovedTwoSpaces) {
-                moves.push_back(Position(enPassantLeft.x, enPassantLeft.y + 1)); // Capture en passant
-            }
-
-            // Check right for en passant
-            Position enPassantRight(position.x + 1, position.y);
-            if (boardManager.getAtPosition(enPassantRight.x, enPassantRight.y) != nullptr &&
-                boardManager.getAtPosition(enPassantRight.x, enPassantRight.y)->getName() == "Black Pawn" &&
-                hasJustMovedTwoSpaces) {
-                moves.push_back(Position(enPassantRight.x, enPassantRight.y + 1)); // Capture en passant
+        // Check left diagonal
+        if (leftDiagonal.x >= 0 && leftDiagonal.x < 8 && leftDiagonal.y >= 0 && leftDiagonal.y < 8) {
+            IGamePiece* piece = boardManager.getAtPosition(leftDiagonal.x, leftDiagonal.y);
+            if (piece != nullptr && piece->isWhite != isWhite) { // Capture opposite team
+                moves.push_back(leftDiagonal);
             }
         }
-        else {
-            // Same logic for black pawns
-            Position enPassantLeft(position.x - 1, position.y);
-            if (boardManager.getAtPosition(enPassantLeft.x, enPassantLeft.y) != nullptr &&
-                boardManager.getAtPosition(enPassantLeft.x, enPassantLeft.y)->getName() == "White Pawn" &&
-                hasJustMovedTwoSpaces) {
-                moves.push_back(Position(enPassantLeft.x, enPassantLeft.y - 1)); // Capture en passant
-            }
 
-            Position enPassantRight(position.x + 1, position.y);
-            if (boardManager.getAtPosition(enPassantRight.x, enPassantRight.y) != nullptr &&
-                boardManager.getAtPosition(enPassantRight.x, enPassantRight.y)->getName() == "White Pawn" &&
-                hasJustMovedTwoSpaces) {
-                moves.push_back(Position(enPassantRight.x, enPassantRight.y - 1)); // Capture en passant
+        // Check right diagonal
+        if (rightDiagonal.x >= 0 && rightDiagonal.x < 8 && rightDiagonal.y >= 0 && rightDiagonal.y < 8) {
+            IGamePiece* piece = boardManager.getAtPosition(rightDiagonal.x, rightDiagonal.y);
+            if (piece != nullptr && piece->isWhite != isWhite) { // Capture opposite team
+                moves.push_back(rightDiagonal);
             }
         }
+
 
         
         return moves;
@@ -304,17 +274,23 @@ public:
 
 // Implement prepareBoard *after* declaring all pieces so they can be referenced here and placed on the board
 void BoardManager::prepareBoard() {
-  // create an 8x8 chessboard defaulting to null pointers of IGamePiece objects
-  board = std::vector<std::vector<IGamePiece *>>(8, std::vector<IGamePiece *>(8, nullptr));
-  // TODO add pieces to the board here
-  board[4][4] = new Plusser(); // example imaginary piece (defaults to black)
-  board[3][2] = new Plusser(); // example imaginary piece (white)
-  board[3][2]->isWhite = true;
-    
-    board[0][1] = new Pawn(); // example imaginary piece (defaults to black)
-    board[0][6] = new Pawn(); // example imaginary piece (defaults to black)
-    board[0][1]->isWhite = true;
+    // Create an 8x8 chessboard defaulting to null pointers of IGamePiece objects
+    board = std::vector<std::vector<IGamePiece *>>(8, std::vector<IGamePiece *>(8, nullptr));
+    // TODO add pieces to the board here
+    //board[4][4] = new Plusser(); // example imaginary piece (defaults to black)
+    //board[3][2] = new Plusser(); // example imaginary piece (white)
+    //board[3][2]->isWhite = true;
 
+    //place white pawns
+    for (int col = 0; col < 8; col++) {
+        board[col][1] = new Pawn();
+        board[col][1]->isWhite = true;
+    }
+
+    //place black pawns
+    for (int col = 0; col < 8; col++) {
+        board[col][6] = new Pawn();
+    }
 }
 
 
