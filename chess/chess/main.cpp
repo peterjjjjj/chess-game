@@ -211,7 +211,8 @@ public:
     std::string render() override {
         if (isWhite) {
             return UNI_PAWN; // use a different symbol for each color
-        } else {
+        }
+        else {
             return UNI_BK_PAWN;
         }
     }
@@ -273,7 +274,8 @@ public:
     std::string render() override {
         if (isWhite) {
             return UNI_ROOK; // white rook
-        } else {
+        }
+        else {
             return UNI_BK_ROOK; // black rook
         }
     }
@@ -339,6 +341,41 @@ public:
 
 };
 
+//definition of knight
+class Knight : public IGamePiece {
+    
+    std::string getName() override {
+        std::string color = isWhite ? "White" : "Black";
+        return color + " Knight";
+    }
+
+    std::string render() override {
+        if (isWhite) {
+            return UNI_KNIGHT; // white rook
+        } else
+        {
+            return UNI_BK_KNIGHT; // black rook
+        }
+    }
+
+    //potential moves
+    std::vector<Position> getPotentialMoves() override {
+        std::vector<Position> moves;
+
+        moves.push_back(Position(position.x + 2, position.y + 1));
+        moves.push_back(Position(position.x + 2, position.y - 1));
+        moves.push_back(Position(position.x - 2, position.y + 1));
+        moves.push_back(Position(position.x - 2, position.y - 1));
+        moves.push_back(Position(position.x + 1, position.y + 2));
+        moves.push_back(Position(position.x + 1, position.y - 2));
+        moves.push_back(Position(position.x - 1, position.y + 2));
+        moves.push_back(Position(position.x - 1, position.y - 2));
+
+        return moves;
+    }
+    
+};
+
 
 
 // Implement prepareBoard *after* declaring all pieces so they can be referenced here and placed on the board
@@ -371,6 +408,17 @@ void BoardManager::prepareBoard() {
     //black rooks
     board[0][7] = new Rook();
     board[7][7] = new Rook();
+
+    //white knights
+    board[1][0] = new Knight();
+    board[1][0] -> isWhite = true;
+    board[6][0] = new Knight();
+    board[6][0] -> isWhite = true;
+    
+    //black knights
+    board[1][7] = new Knight();
+    board[6][7] = new Knight();
+
 
 }
 
