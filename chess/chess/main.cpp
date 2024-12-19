@@ -78,7 +78,9 @@ public:
   virtual ~IGamePiece() = default;
     
     bool isFirstMove = true;
-
+    bool justMovedUpTwo = false;
+    
+    
 };
 
 
@@ -376,6 +378,81 @@ class Knight : public IGamePiece {
     
 };
 
+//definition of bishop
+class Bishop : public IGamePiece {
+public:
+    std::string getName() override {
+        std::string color = isWhite ? "White" : "Black";
+        return color + " Bishop";
+    }
+
+    std::string render() override {
+        if (isWhite) {
+            return UNI_BISHOP; // white rook
+        }
+        else {
+            return UNI_BK_BISHOP; // black rook
+        }
+    }
+
+    // potential moves
+    std::vector<Position> getPotentialMoves() override {
+        std::vector<Position> moves;
+
+        //topright
+        for (int x = position.x + 1, y = position.y + 1; x < 8 && y < 8; ++x, ++y) {
+            if (boardManager.getAtPosition(x, y) == nullptr) {
+                moves.push_back(Position(x, y));
+            }
+            else {
+                if (boardManager.getAtPosition(x, y)->isWhite != isWhite) {
+                    moves.push_back(Position(x, y));
+                }
+                break;
+            }
+        }
+
+        //topleft
+        for (int x = position.x - 1, y = position.y + 1; x >= 0 && y < 8; --x, ++y) {
+            if (boardManager.getAtPosition(x, y) == nullptr) {
+                moves.push_back(Position(x, y));
+            } else {
+                if (boardManager.getAtPosition(x, y)->isWhite != isWhite) {
+                    moves.push_back(Position(x, y));
+                }
+                break;
+            }
+        }
+
+        //bottom right
+        for (int x = position.x + 1, y = position.y - 1; x < 8 && y >= 0; ++x, --y) {
+            if (boardManager.getAtPosition(x, y) == nullptr) {
+                moves.push_back(Position(x, y));
+            } else {
+                if (boardManager.getAtPosition(x, y)->isWhite != isWhite) {
+                    moves.push_back(Position(x, y));
+                }
+                break;
+            }
+        }
+
+        //bottom left
+        for (int x = position.x - 1, y = position.y - 1; x >= 0 && y >= 0; --x, --y) {
+            if (boardManager.getAtPosition(x, y) == nullptr) {
+                moves.push_back(Position(x, y));
+            } else {
+                if (boardManager.getAtPosition(x, y)->isWhite != isWhite) {
+                    moves.push_back(Position(x, y));
+                }
+                break;
+            }
+        }
+
+        return moves;
+    }
+
+};
+
 
 
 // Implement prepareBoard *after* declaring all pieces so they can be referenced here and placed on the board
@@ -419,8 +496,19 @@ void BoardManager::prepareBoard() {
     board[1][7] = new Knight();
     board[6][7] = new Knight();
 
+    //white bishop
+    board[2][0] = new Bishop();
+    board[2][0] -> isWhite = true;
+    board[5][0] = new Bishop();
+    board[5][0] -> isWhite = true;
+
+    
+    //black bishop
+    board[2][7] = new Bishop();
+    board[5][7] = new Bishop();
 
 }
+
 
 
 // you shouldnt need to modify main(), but you are free to change it if you want
