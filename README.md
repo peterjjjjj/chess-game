@@ -1,1 +1,1 @@
-#final project for CISP 400.
+#chess game - incomplete 
